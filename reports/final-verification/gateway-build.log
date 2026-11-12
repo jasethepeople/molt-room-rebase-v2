@@ -1,0 +1,4 @@
+
+> integration-gateway-a2a@0.1.0 build
+> tsc --noEmit
+

@@ -1,0 +1,4 @@
+Candidate SHA-256: bf22448eb972b32ccb54f4924c385fa4d0a277efe3f97627686e2d190731f24d
+Gateway pinned commit: acb4c399ad6ba19ee87ba01bb7bbd5b678591791
+Fresh extraction: /tmp/room-gateway-final-verifier.HjXTw7/archive
+Gateway source after fresh test: 0

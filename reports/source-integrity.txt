@@ -1,0 +1,30 @@
+Source integrity and bundle comparison
+Room commit: d6f975f7c0b7394246503ff637a1461a4c38cac4
+Gateway commit: acb4c399ad6ba19ee87ba01bb7bbd5b678591791
+Room tracked files: 57
+Missing Room tracked files: 0
+Missing: none
+Changed Room tracked files (8):
+  CHANGED DESIGN-PROOF.md
+  CHANGED FAILURES.md
+  CHANGED README.md
+  CHANGED src/cli.ts
+  CHANGED src/index.ts
+  CHANGED src/ledger.ts
+  CHANGED src/room.ts
+  CHANGED src/types.ts
+Additional Room files (4):
+  ADDED src/gateway.ts
+  ADDED tests/gateway-client.test.ts
+  ADDED tests/gateway-member.test.ts
+  ADDED tests/fixtures/gateway-loopback-server.mjs
+Room contract SHA-256: f2944f94d951af8242df27663048f3cd126b92bf963a69b67e204952318bab1e
+Owner contract SHA-256: f2944f94d951af8242df27663048f3cd126b92bf963a69b67e204952318bab1e
+Root verifier SHA-256: 888152785e0cc958dc927718f1a56a3aaf276fea423fc8b4d4211845f66503ff
+owner contract equals pinned and bundled: PASS
+owner amendments equals bundled: PASS
+owner skill equals bundled: PASS
+Room verifier unchanged: PASS
+Room package and lock unchanged: PASS
+Room source clone clean: PASS
+Gateway source clone clean: PASS

@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: gateway member validates its signed tool scope and assignment before dispatch
+ok 1 - gateway member validates its signed tool scope and assignment before dispatch
+  ---
+  duration_ms: 3436.604175
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 4: member token budget exceeded; event 4: member thread token budget exceeded
+# Subtest: gateway response over budget is never truncated or admitted and produces a signed exhaustion pause
+ok 2 - gateway response over budget is never truncated or admitted and produces a signed exhaustion pause
+  ---
+  duration_ms: 2600.122391
+  type: 'test'
+  ...
+# Subtest: gateway runner verifies the full signed chain before dispatch and makes no request for a tampered room
+ok 3 - gateway runner verifies the full signed chain before dispatch and makes no request for a tampered room
+  ---
+  duration_ms: 1770.712909
+  type: 'test'
+  ...
+# Subtest: gateway member budget exhaustion pauses before making a gateway request and reports per-thread usage
+ok 4 - gateway member budget exhaustion pauses before making a gateway request and reports per-thread usage
+  ---
+  duration_ms: 2918.514976
+  type: 'test'
+  ...
+# Subtest: a thread-scoped signed budget pause blocks only gateway dispatch on that thread
+ok 5 - a thread-scoped signed budget pause blocks only gateway dispatch on that thread
+  ---
+  duration_ms: 2373.760274
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 5: member token budget exceeded; event 5: member thread token budget exceeded
+# Subtest: Gateway output loses a concurrent budget race at the signed ledger lock and is not admitted
+ok 6 - Gateway output loses a concurrent budget race at the signed ledger lock and is not admitted
+  ---
+  duration_ms: 3162.983161
+  type: 'test'
+  ...
+# Subtest: unavailable loopback gateway reports NOT AVAILABLE and appends no Room event
+ok 7 - unavailable loopback gateway reports NOT AVAILABLE and appends no Room event
+  ---
+  duration_ms: 1863.390037
+  type: 'test'
+  ...
+# Subtest: real pinned gateway native/echo runs on loopback, signs a full turn, and preserves the challenge/verdict chain
+ok 8 - real pinned gateway native/echo runs on loopback, signs a full turn, and preserves the challenge/verdict chain
+  ---
+  duration_ms: 4210.024522
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24625.597191

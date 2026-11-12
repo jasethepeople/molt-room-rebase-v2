@@ -1,0 +1,48 @@
+
+> integration-gateway-a2a@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/room-gateway-final-verifier.HjXTw7/gateway
+
+stdout | tests/e2e.test.ts > e2e: external github source → event bus → native transform chain > github new-or-updated-issue emits CanonicalEvents on the bus (httpOverride fixture)
+{"ts":"2026-11-12T01:19:21.109Z","level":"info","ns":"external/github/new-or-updated-issue","msg":"Issue updated: \"Bug: loader crashes on empty registry\"","data":{"number":7}}
+{"ts":"2026-11-12T01:19:21.110Z","level":"info","ns":"external/github/new-or-updated-issue","msg":"Issue updated: \"Feature: add stripe source\"","data":{"number":8}}
+
+stdout | tests/e2e.test.ts > e2e: external github source → event bus → native transform chain > github new-or-updated-issue emits CanonicalEvents on the bus (httpOverride fixture)
+{"ts":"2026-11-12T01:19:21.144Z","level":"info","ns":"native/transform","msg":"native_transform emitted CanonicalEvent","data":{"id":"ecf34960-79ce-48d1-a6e6-9fb054a1e69b","topic":"github.issue_transformed"}}
+
+stdout | tests/e2e.test.ts > e2e: github get-repository action (real network, fixture fallback) > runs without Pipedream cloud
+{"ts":"2026-11-12T01:19:21.388Z","level":"info","ns":"external/github/get-repository","msg":"Successfully retrieved repository PipedreamHQ/pipedream"}
+
+stdout | tests/e2e.test.ts > e2e: github get-repository action (real network, fixture fallback) > runs without Pipedream cloud
+[e2e] get-repository via live API
+
+stdout | tests/e2e.test.ts > e2e: slack post-message action with httpOverride (request shape) > posts to chat.postMessage with bearer auth and JSON body
+{"ts":"2026-11-12T01:19:21.396Z","level":"info","ns":"external/slack/post-message","msg":"Message sent to C1234567890"}
+
+stdout | tests/e2e.test.ts > e2e: slack post-message action with httpOverride (request shape) > stripe list-customers sends bearer auth and hits /v1/customers
+{"ts":"2026-11-12T01:19:21.405Z","level":"info","ns":"external/stripe/list-customers","msg":"Successfully fetched 1 customer"}
+
+stdout | tests/e2e.test.ts > e2e: full HTTP round-trip through the real server > execute native/transform over HTTP emits a CanonicalEvent result
+{"ts":"2026-11-12T01:19:21.416Z","level":"info","ns":"native/transform","msg":"native_transform emitted CanonicalEvent","data":{"id":"8258744a-0be1-4733-bfe0-fbeb91953f38","topic":"github.http_test"}}
+
+ ✓ tests/e2e.test.ts (5 tests) 419ms
+stdout | tests/router.test.ts > router / HTTP API (real server, ephemeral port) > POST /api/v1/execute native/echo → ok:true and echoes the event
+{"ts":"2026-11-12T01:19:26.323Z","level":"info","ns":"native/echo","msg":"native_echo received event","data":{"hello":"world","n":42}}
+
+ ✓ tests/router.test.ts (7 tests) 4730ms
+   ✓ router / HTTP API (real server, ephemeral port) > GET /api/v1/registry lists components with usable targets 4648ms
+stdout | tests/a2a.test.ts > a2a http endpoint > message/send executes a component and completes the task with an artifact
+{"ts":"2026-11-12T01:19:30.268Z","level":"info","ns":"native/echo","msg":"native_echo received event","data":{"hello":"a2a"}}
+
+ ✓ tests/a2a.test.ts (8 tests) 3703ms
+   ✓ a2a http endpoint > serves the gateway agent card at the well-known path 3584ms
+ ✓ tests/loader.test.ts (5 tests) 3978ms
+   ✓ loader > discovers external github/slack actions and native modules 3924ms
+
+ Test Files  4 passed (4)
+      Tests  25 passed (25)
+   Start at  01:19:20
+   Duration  14.20s (transform 268ms, setup 0ms, collect 427ms, tests 12.83s, environment 1ms, prepare 297ms)
+

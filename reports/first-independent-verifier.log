@@ -1,0 +1,991 @@
+INDEPENDENT VERIFIER — ROOM → INTEGRATION-GATEWAY REBASE
+Date: 2026-11-12 UTC
+
+VERDICT
+The candidate archive passes ZIP integrity and tracked-file inventory checks. The fresh Gateway build/tests and Room install/typecheck/tests all pass. The archive has report/documentation drift and one incorrect Gateway commit string; findings and caveats are below. No application source, tests, docs, package files, or pinned clone were changed. This verification ran in the same host environment, not on an independent physical machine.
+
+SAFETY / SCOPE
+- Candidate extracted into a newly created disposable directory: /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/archive-check/extract/molt-room-gateway-rebase-2026-11-10
+- Fresh test copies: /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/{gateway,room}
+- npm installs and all tests ran only in those scratch copies and isolated temporary HOME/TMPDIR directories. Room test helpers use temporary homes and remove them. No Room CLI command was run against a real home.
+- Gateway suite ran with `env -i` and no credentials. Its existing test made one unauthenticated, read-only GET to the public GitHub repository API; output confirms `[e2e] get-repository via live API`. No writes, production credentials, owner VM, real external integration, deployment, push, or publish were used.
+- The existing output working tree already contains `room/node_modules/`; it was left untouched. The candidate ZIP contains no `node_modules`, and this verification installed dependencies only in scratch.
+
+ARTIFACT / SOURCE CHECKS
+- Candidate: /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/room-gateway-rebase-candidate.zip
+- SHA-256: 33eee75260c4fa1753d25dcaec42d8e04c76588639ea5e9bad820659f5ab8f23; 196,340 bytes.
+- `unzip -t`: PASS, no corrupt entries. Fresh extraction byte-matches all 79 regular archive files.
+- Archive has 61 files under `room/`: all 57 tracked Room files from pinned commit d6f975f7c0b7394246503ff637a1461a4c38cac4, with no omissions; exactly 8 tracked changes (DESIGN-PROOF.md, FAILURES.md, README.md, src/cli.ts, src/index.ts, src/ledger.ts, src/room.ts, src/types.ts); exactly 4 additions (src/gateway.ts, tests/fixtures/gateway-loopback-server.mjs, tests/gateway-client.test.ts, tests/gateway-member.test.ts).
+- No forbidden archive paths (`node_modules`, `.git`, `.env`, private-key filenames) and no matches for high-confidence private-key/API-token/credential patterns.
+- Bundled `room/ROOM-CONTRACT.md` and `room/verify.ts` each byte-match the pinned Room source and their workspace counterparts. The amendments and backend-prime skill also match the workspace copies.
+- Room clone HEAD is d6f975f7c0b7394246503ff637a1461a4c38cac4; Gateway clone HEAD is acb4c399ad6ba19ee87ba01bb7bbd5b678591791. Both clones were clean before/after. No package manifest or lockfile is changed in the Room diff.
+- Archive differs from the current output working tree in four documentation/evidence files: REPORT.md, room/README.md, room/DESIGN-PROOF.md, reports/source-integrity.txt. The working-tree versions are newer; source and tests in the archive match. The archive's budget-quarantine wording is less precise than the newer working-tree wording: ledger preflight rejects before building the candidate event, so the stored failure hash is an admission-failure identifier, not a hash of the rejected result.
+
+CODE / REPORT AUDIT
+- `src/gateway.ts` accepts only HTTP origins with literal loopback IPv4/IPv6 addresses and no path/query/fragment/credentials; posts only to `/a2a`, disallows redirects, times out, and bounds the response to 1 MiB. The request is JSON-RPC `message/send` with one target and the assignment ID/thread/prompt; it includes no auth/config/Room history. Response ID, completed task, exactly one data artifact, target, result status, and integer metadata are checked.
+- `src/room.ts` verifies the signed Room before dispatch; checks gateway-backed membership, signed tool allowlist, threaded assignment for the exact member, present human author, subscription and pause state; preflights prompt/result against remaining room/thread usage; records the full JSON result as an ordinary signed turn. `src/ledger.ts` rechecks admission under the append lock, appends/verifies signed events, and on rejection leaves accepted transcript unchanged, stores reason/hash metadata and records a signed pause when exhausted. The e2e test verifies challenge → verdict and root replay.
+- Duplicate protection is verified for sequential repeats only. The check is before network dispatch; it is not repeated atomically inside the append lock. Concurrent invocations can both pass the guard and dispatch before either result is signed; this remains an open caveat (no such concurrency test is present).
+- REPORT.md's Gateway commit string is wrong: it says `acb4c399ad6ba19ee87ba01bb7b7bbd5b678591791` (42 characters); the pinned commit is `acb4c399ad6ba19ee87ba01bb7bbd5b678591791` (40 characters). README.md, BRIEF.md, and actual clone use the correct pin.
+- REPORT.md attack 60 says a CLI result was observed as `NOT AVAILABLE`. The archived unavailable-path test calls `runGatewayAssignedTask()` directly, not the CLI subprocess. `src/cli.ts` does print `NOT AVAILABLE` for that status, but the archived evidence does not establish an executed CLI run.
+- The archive REPORT still marks independent verification pending and its acceptance table says the bundle/report is PASS; the newer working-tree REPORT changes that table item to PENDING. This log supplies the independent result; no other output-tree file was changed.
+
+FRESH COMMAND RESULTS
+Runtime: Node v22.23.4; npm 10.9.9. Gateway was created from `git archive` of the verified pinned commit; Room test copy came from the fresh archive extraction.
+- Gateway `npm ci`: exit 0; npm audit reported 6 dependency vulnerabilities (3 moderate, 1 high, 2 critical). Not fixed or modified.
+- Gateway `npm run build`: exit 0.
+- Gateway `npm test`: exit 0; 4 test files, 25 passed, 0 failed, 0 skipped. The read-only GitHub API test used the live public API.
+- Room `npm ci`: exit 0; 0 vulnerabilities.
+- Room `npm run typecheck`: exit 0.
+- Room `ROOM_GATEWAY_PATH=<fresh Gateway copy> npm test`: exit 0; 56 top-level tests, 108 total including nested tests, 107 passed, 0 failed, 1 skipped. Skip: optional local Ollama generation, because Ollama was not reachable.
+
+Full `unzip -t`, archive inventory/source comparison, provenance/status, and complete stdout/stderr plus exit status for all six fresh commands follow.
+For text readability, the two literal NUL bytes from the rejected-NUL target test name are rendered as `\x00` in the captured output below.
+
+
+=== EXACT SOURCE-COPY / STATUS RECORD ===
+Gateway source copy command: git -C /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/src/integration-gateway archive --format=tar acb4c399ad6ba19ee87ba01bb7bbd5b678591791 | tar -xf - -C /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/gateway
+Room source copy command: cp -a /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/archive-check/extract/molt-room-gateway-rebase-2026-11-10/room /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/room
+gateway source clone HEAD=acb4c399ad6ba19ee87ba01bb7bbd5b678591791
+Room source clone HEAD=d6f975f7c0b7394246503ff637a1461a4c38cac4
+Gateway tree=d77b66108b0e2b9db0b1867fe2ee19d5a935b75c
+Room tree=7b425408af09f6314cffdbb56f2821d922c91cef
+Gateway fresh archive files=58883
+Room fresh candidate files=61
+--- FINAL SOURCE TREE STATES ---
+Room clone HEAD: d6f975f7c0b7394246503ff637a1461a4c38cac4
+Room clone status:
+Gateway clone HEAD: acb4c399ad6ba19ee87ba01bb7bbd5b678591791
+Gateway clone status:
+
+=== FULL unzip -t OUTPUT ===
+Archive:  /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/room-gateway-rebase-candidate.zip
+    testing: molt-room-gateway-rebase-2026-11-10/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/baseline-gateway-serial-retry.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/baseline-room.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/final-room-install.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/typecheck.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/gateway-member-tests.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/full-room-suite.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/gateway-build.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/gateway-suite.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/cli-help.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/gateway-focused-tests.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/first-full-suite-failed-expectation.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/first-typecheck-errors.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/baseline-gateway-incomplete-parallel-attempt.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/reports/source-integrity.txt   OK
+    testing: molt-room-gateway-rebase-2026-11-10/BRIEF.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/references/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/references/backend-prime-SKILL.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/.gitignore   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/migration-e2e.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/live-member.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/strip.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/gateway-member.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/portable-verifier.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/room.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/contract-verifier.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-combined.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-protected.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-frames.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-repeated-headers.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-log-tail.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/gateway-loopback-server.mjs   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-padding.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-mixed.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/fixtures/strip-filler.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tests/gateway-client.test.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/verify.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tsconfig.json   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/template/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/template/default/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/template/default/template.json   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/template/default/seams.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/template/default/header.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/ROOM-CONTRACT-PASTE-2026-10-28.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/README.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/ROOM-CONTRACT-AMENDMENTS-2026-10-28.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/ROOM-CONTRACT.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/package-lock.json   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/FAILURES.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/BASELINE-TEST-OUTPUT.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/CLI-HELP-OUTPUT.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/FILE-TREE.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/FROZEN-HASH-REPORT.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/NPM-CI-OUTPUT.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/STUB-AND-CLAIM-DISCLOSURE.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/TEST-OUTPUT.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/TYPECHECK-OUTPUT.log   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/delivery/VALIDATION-REPORT.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tools/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/tools/verify-transcript.mjs   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/DESIGN-PROOF.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/audit-room-a2a-implementation-2026-10-24.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/status-2026-10-28.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/room-deployment-security-review-2026-10-24.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/room-remake-plan-2026-10-27.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/room-deployment-runbook-2026-10-24.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/audit-room-deployment-security-fixes-2026-10-24.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/docs/room-plan-multi-agent-sandbox-2026-10-24.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/package.json   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/ledger.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/strip.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/canonical.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/room.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/identity.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/paths.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/render.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/cli.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/types.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/index.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/gateway.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/limits.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/room/src/ollama.ts   OK
+    testing: molt-room-gateway-rebase-2026-11-10/README.md   OK
+    testing: molt-room-gateway-rebase-2026-11-10/REPORT.md   OK
+No errors detected in compressed data of /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/room-gateway-rebase-candidate.zip.
+
+=== INDEPENDENT ARCHIVE INVENTORY / BYTE-COMPARISON OUTPUT ===
+Archive path: /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/room-gateway-rebase-candidate.zip
+Archive SHA-256: 33eee75260c4fa1753d25dcaec42d8e04c76588639ea5e9bad820659f5ab8f23
+Archive bytes: 196340
+ZIP CRC/integrity: PASS
+Top-level archive folder: molt-room-gateway-rebase-2026-11-10
+Archive regular files: 79
+Pinned Room tracked count: 57
+Archived room file count: 61
+Tracked omissions: none
+Tracked changes count: 8
+Tracked changes: DESIGN-PROOF.md, FAILURES.md, README.md, src/cli.ts, src/index.ts, src/ledger.ts, src/room.ts, src/types.ts
+New room files count: 4
+New room files: src/gateway.ts, tests/fixtures/gateway-loopback-server.mjs, tests/gateway-client.test.ts, tests/gateway-member.test.ts
+Tracked/additions inventory PASS: True
+Fresh extraction byte comparison: PASS (79 archive files)
+Workspace-vs-archive bytes: differences/missing: ['reports/source-integrity.txt', 'room/README.md', 'room/DESIGN-PROOF.md', 'REPORT.md']
+Forbidden archive paths (node_modules/.git/.env/private-key filenames): none
+High-confidence secret-pattern matches: none
+room/ROOM-CONTRACT.md equals pinned source: PASS
+room/ROOM-CONTRACT.md equals owner workspace counterpart: PASS
+room/verify.ts equals pinned source: PASS
+room/verify.ts equals owner workspace counterpart: PASS
+room/ROOM-CONTRACT-AMENDMENTS-2026-10-28.md equals owner workspace counterpart: PASS
+references/backend-prime-SKILL.md equals owner workspace counterpart: PASS
+Room source HEAD: d6f975f7c0b7394246503ff637a1461a4c38cac4
+Room source HEAD expected: d6f975f7c0b7394246503ff637a1461a4c38cac4
+Room source clean: PASS
+Gateway source HEAD: acb4c399ad6ba19ee87ba01bb7bbd5b678591791
+Gateway source clean: PASS
+Gateway report pin string: acb4c399ad6ba19ee87ba01bb7b7bbd5b678591791
+Gateway report pin matches pinned commit: FAIL; actual pinned is acb4c399ad6ba19ee87ba01bb7bbd5b678591791
+
+=== FULL FRESH COMMAND OUTPUT: gateway-ci ===
+COMMAND: (cd /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/gateway && env -i PATH=<inherited-path> HOME=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway TMPDIR=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/tmp npm_config_userconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/user.npmrc npm_config_globalconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/global.npmrc npm ci)
+ENVIRONMENT: clean env -i; only PATH, isolated HOME, isolated TMPDIR, npm user/global config disabled
+
+--- OUTPUT ---
+
+added 57 packages, and audited 58 packages in 5s
+
+14 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (3 moderate, 1 high, 2 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+
+--- EXIT STATUS: 0 ---
+
+=== FULL FRESH COMMAND OUTPUT: gateway-build ===
+COMMAND: (cd /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/gateway && env -i PATH=<inherited-path> HOME=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway TMPDIR=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/tmp npm_config_userconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/user.npmrc npm_config_globalconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/global.npmrc npm run build)
+ENVIRONMENT: clean env -i; only PATH, isolated HOME, isolated TMPDIR, npm user/global config disabled
+
+--- OUTPUT ---
+
+> integration-gateway-a2a@0.1.0 build
+> tsc --noEmit
+
+
+--- EXIT STATUS: 0 ---
+
+=== FULL FRESH COMMAND OUTPUT: gateway-test ===
+COMMAND: (cd /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/gateway && env -i PATH=<inherited-path> HOME=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway TMPDIR=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/tmp npm_config_userconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/user.npmrc npm_config_globalconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-gateway/global.npmrc npm test)
+ENVIRONMENT: clean env -i; only PATH, isolated HOME, isolated TMPDIR, npm user/global config disabled; no credentials; suite includes public read-only GitHub GET
+
+--- OUTPUT ---
+
+> integration-gateway-a2a@0.1.0 test
+> vitest run
+
+
+ RUN  v2.1.9 /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/gateway
+
+stdout | tests/e2e.test.ts > e2e: external github source → event bus → native transform chain > github new-or-updated-issue emits CanonicalEvents on the bus (httpOverride fixture)
+{"ts":"2026-11-12T00:40:58.863Z","level":"info","ns":"external/github/new-or-updated-issue","msg":"Issue updated: \"Bug: loader crashes on empty registry\"","data":{"number":7}}
+{"ts":"2026-11-12T00:40:58.864Z","level":"info","ns":"external/github/new-or-updated-issue","msg":"Issue updated: \"Feature: add stripe source\"","data":{"number":8}}
+
+stdout | tests/e2e.test.ts > e2e: external github source → event bus → native transform chain > github new-or-updated-issue emits CanonicalEvents on the bus (httpOverride fixture)
+{"ts":"2026-11-12T00:40:58.874Z","level":"info","ns":"native/transform","msg":"native_transform emitted CanonicalEvent","data":{"id":"5b2e0a41-8176-4db6-ba66-dc9d8b6d485a","topic":"github.issue_transformed"}}
+
+stdout | tests/e2e.test.ts > e2e: github get-repository action (real network, fixture fallback) > runs without Pipedream cloud
+{"ts":"2026-11-12T00:40:59.447Z","level":"info","ns":"external/github/get-repository","msg":"Successfully retrieved repository PipedreamHQ/pipedream"}
+
+stdout | tests/e2e.test.ts > e2e: github get-repository action (real network, fixture fallback) > runs without Pipedream cloud
+[e2e] get-repository via live API
+
+stdout | tests/e2e.test.ts > e2e: slack post-message action with httpOverride (request shape) > posts to chat.postMessage with bearer auth and JSON body
+{"ts":"2026-11-12T00:40:59.571Z","level":"info","ns":"external/slack/post-message","msg":"Message sent to C1234567890"}
+
+stdout | tests/e2e.test.ts > e2e: slack post-message action with httpOverride (request shape) > stripe list-customers sends bearer auth and hits /v1/customers
+{"ts":"2026-11-12T00:40:59.655Z","level":"info","ns":"external/stripe/list-customers","msg":"Successfully fetched 1 customer"}
+
+stdout | tests/e2e.test.ts > e2e: full HTTP round-trip through the real server > execute native/transform over HTTP emits a CanonicalEvent result
+{"ts":"2026-11-12T00:40:59.770Z","level":"info","ns":"native/transform","msg":"native_transform emitted CanonicalEvent","data":{"id":"101aeb11-0b58-40a4-a820-9763e00e31ab","topic":"github.http_test"}}
+
+ ✓ tests/e2e.test.ts (5 tests) 1708ms
+   ✓ e2e: external github source → event bus → native transform chain > github new-or-updated-issue emits CanonicalEvents on the bus (httpOverride fixture) 495ms
+   ✓ e2e: github get-repository action (real network, fixture fallback) > runs without Pipedream cloud 685ms
+stdout | tests/router.test.ts > router / HTTP API (real server, ephemeral port) > POST /api/v1/execute native/echo → ok:true and echoes the event
+{"ts":"2026-11-12T00:41:17.543Z","level":"info","ns":"native/echo","msg":"native_echo received event","data":{"hello":"world","n":42}}
+
+ ✓ tests/router.test.ts (7 tests) 16899ms
+   ✓ router / HTTP API (real server, ephemeral port) > GET /api/v1/registry lists components with usable targets 16409ms
+stdout | tests/a2a.test.ts > a2a http endpoint > message/send executes a component and completes the task with an artifact
+{"ts":"2026-11-12T00:41:27.064Z","level":"info","ns":"native/echo","msg":"native_echo received event","data":{"hello":"a2a"}}
+
+ ✓ tests/a2a.test.ts (8 tests) 8558ms
+   ✓ a2a http endpoint > serves the gateway agent card at the well-known path 8141ms
+ ✓ tests/loader.test.ts (5 tests) 11479ms
+   ✓ loader > discovers external github/slack actions and native modules 11275ms
+
+ Test Files  4 passed (4)
+      Tests  25 passed (25)
+   Start at  00:40:55
+   Duration  46.10s (transform 1.41s, setup 0ms, collect 2.07s, tests 38.64s, environment 1ms, prepare 1.60s)
+
+
+--- EXIT STATUS: 0 ---
+
+=== FULL FRESH COMMAND OUTPUT: room-ci ===
+COMMAND: (cd /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/room && env -i PATH=<inherited-path> HOME=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room TMPDIR=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/tmp npm_config_userconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/user.npmrc npm_config_globalconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/global.npmrc npm ci)
+ENVIRONMENT: clean env -i; only PATH, isolated HOME, isolated TMPDIR, npm user/global config disabled
+
+--- OUTPUT ---
+
+added 3 packages, and audited 4 packages in 4s
+
+found 0 vulnerabilities
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+
+--- EXIT STATUS: 0 ---
+
+=== FULL FRESH COMMAND OUTPUT: room-typecheck ===
+COMMAND: (cd /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/room && env -i PATH=<inherited-path> HOME=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room TMPDIR=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/tmp npm_config_userconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/user.npmrc npm_config_globalconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/global.npmrc npm run typecheck)
+ENVIRONMENT: clean env -i; only PATH, isolated HOME, isolated TMPDIR, npm user/global config disabled
+
+--- OUTPUT ---
+
+> the-room-core@0.1.0 typecheck
+> tsc --noEmit
+
+
+--- EXIT STATUS: 0 ---
+
+=== FULL FRESH COMMAND OUTPUT: room-test ===
+COMMAND: (cd /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/room && env -i PATH=<inherited-path> HOME=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room TMPDIR=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/tmp npm_config_userconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/user.npmrc npm_config_globalconfig=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/global.npmrc env ROOM_GATEWAY_PATH=/home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/gateway npm test)
+ENVIRONMENT: clean env -i; only PATH, isolated HOME, isolated TMPDIR, npm user/global config disabled
+
+--- OUTPUT ---
+
+> the-room-core@0.1.0 test
+> node --test tests/*.test.ts
+
+TAP version 13
+# Subtest: contract verifier runs from an empty copied directory using only exported files
+ok 1 - contract verifier runs from an empty copied directory using only exported files
+  ---
+  duration_ms: 608.740089
+  type: 'test'
+  ...
+# Subtest: genesis fingerprint mismatch is rejected before the transcript is trusted
+ok 2 - genesis fingerprint mismatch is rejected before the transcript is trusted
+  ---
+  duration_ms: 316.095065
+  type: 'test'
+  ...
+# Subtest: a one-byte payload edit fails at the named signed event
+ok 3 - a one-byte payload edit fails at the named signed event
+  ---
+  duration_ms: 587.060422
+  type: 'test'
+  ...
+# Subtest: duplicate JSON keys are rejected before canonicalization
+ok 4 - duplicate JSON keys are rejected before canonicalization
+  ---
+  duration_ms: 1006.039504
+  type: 'test'
+  ...
+# Subtest: self-certifying joins pin fingerprints, and agent seam events fail role resolution
+ok 5 - self-certifying joins pin fingerprints, and agent seam events fail role resolution
+  ---
+  duration_ms: 985.948549
+  type: 'test'
+  ...
+# Subtest: a challenge may have one verdict, and the verdict remains a signed historical event
+ok 6 - a challenge may have one verdict, and the verdict remains a signed historical event
+  ---
+  duration_ms: 913.145515
+  type: 'test'
+  ...
+# Subtest: canon replay uses typed currentRule and updates it only after a verified enactment
+ok 7 - canon replay uses typed currentRule and updates it only after a verified enactment
+  ---
+  duration_ms: 978.295096
+  type: 'test'
+  ...
+# Subtest: proposal supersedes must cite an earlier proposal
+ok 8 - proposal supersedes must cite an earlier proposal
+  ---
+  duration_ms: 494.698119
+  type: 'test'
+  ...
+# Subtest: seals checkpoint seams without ending the chain; latest and historical snapshots are checked separately
+ok 9 - seals checkpoint seams without ending the chain; latest and historical snapshots are checked separately
+  ---
+  duration_ms: 1499.003518
+  type: 'test'
+  ...
+# Subtest: gateway origin accepts only literal loopback HTTP origins
+    # Subtest: accepts http://127.0.0.1:3000
+    ok 1 - accepts http://127.0.0.1:3000
+      ---
+      duration_ms: 1.172331
+      type: 'test'
+      ...
+    # Subtest: accepts http://127.12.34.56:3000
+    ok 2 - accepts http://127.12.34.56:3000
+      ---
+      duration_ms: 0.163325
+      type: 'test'
+      ...
+    # Subtest: accepts http://[::1]:3000
+    ok 3 - accepts http://[::1]:3000
+      ---
+      duration_ms: 3.532702
+      type: 'test'
+      ...
+    # Subtest: rejects http://example.com:3000
+    ok 4 - rejects http://example.com:3000
+      ---
+      duration_ms: 0.510805
+      type: 'test'
+      ...
+    # Subtest: rejects http://localhost:3000
+    ok 5 - rejects http://localhost:3000
+      ---
+      duration_ms: 0.160305
+      type: 'test'
+      ...
+    # Subtest: rejects https://127.0.0.1:3000
+    ok 6 - rejects https://127.0.0.1:3000
+      ---
+      duration_ms: 0.179978
+      type: 'test'
+      ...
+    # Subtest: rejects http://192.0.2.1:3000
+    ok 7 - rejects http://192.0.2.1:3000
+      ---
+      duration_ms: 0.09721
+      type: 'test'
+      ...
+    # Subtest: rejects http://[2001:db8::1]:3000
+    ok 8 - rejects http://[2001:db8::1]:3000
+      ---
+      duration_ms: 0.22142
+      type: 'test'
+      ...
+    # Subtest: rejects http://127.0.0.1:3000/path
+    ok 9 - rejects http://127.0.0.1:3000/path
+      ---
+      duration_ms: 0.291636
+      type: 'test'
+      ...
+    # Subtest: rejects http://127.0.0.1:3000/?x=1
+    ok 10 - rejects http://127.0.0.1:3000/?x=1
+      ---
+      duration_ms: 0.23585
+      type: 'test'
+      ...
+    # Subtest: rejects http://user:password@127.0.0.1:3000
+    ok 11 - rejects http://user:password@127.0.0.1:3000
+      ---
+      duration_ms: 0.108691
+      type: 'test'
+      ...
+    # Subtest: rejects http://10.1.2.3:3000
+    ok 12 - rejects http://10.1.2.3:3000
+      ---
+      duration_ms: 0.194584
+      type: 'test'
+      ...
+    # Subtest: rejects http://169.254.169.254:3000
+    ok 13 - rejects http://169.254.169.254:3000
+      ---
+      duration_ms: 0.091555
+      type: 'test'
+      ...
+    # Subtest: rejects http://1.1.1.1:3000
+    ok 14 - rejects http://1.1.1.1:3000
+      ---
+      duration_ms: 0.079647
+      type: 'test'
+      ...
+    # Subtest: rejects http://[::ffff:127.0.0.1]:3000
+    ok 15 - rejects http://[::ffff:127.0.0.1]:3000
+      ---
+      duration_ms: 0.082742
+      type: 'test'
+      ...
+    # Subtest: rejects http://[fc00::1]:3000
+    ok 16 - rejects http://[fc00::1]:3000
+      ---
+      duration_ms: 0.076773
+      type: 'test'
+      ...
+    # Subtest: rejects http://localhost.:3000
+    ok 17 - rejects http://localhost.:3000
+      ---
+      duration_ms: 0.080243
+      type: 'test'
+      ...
+    # Subtest: rejects http://127.0.0.1:99999
+    ok 18 - rejects http://127.0.0.1:99999
+      ---
+      duration_ms: 0.088484
+      type: 'test'
+      ...
+    # Subtest: rejects not a URL
+    ok 19 - rejects not a URL
+      ---
+      duration_ms: 0.079871
+      type: 'test'
+      ...
+    1..19
+ok 10 - gateway origin accepts only literal loopback HTTP origins
+  ---
+  duration_ms: 45.217179
+  type: 'test'
+  ...
+# Subtest: gateway target grammar excludes traversal and arbitrary components
+    # Subtest: accepts native/echo
+    ok 1 - accepts native/echo
+      ---
+      duration_ms: 0.177593
+      type: 'test'
+      ...
+    # Subtest: accepts native/dispatcher-log
+    ok 2 - accepts native/dispatcher-log
+      ---
+      duration_ms: 0.11515
+      type: 'test'
+      ...
+    # Subtest: accepts external/openweather_api/get-current-weather-by-location
+    ok 3 - accepts external/openweather_api/get-current-weather-by-location
+      ---
+      duration_ms: 0.059808
+      type: 'test'
+      ...
+    # Subtest: rejects empty target
+    ok 4 - rejects empty target
+      ---
+      duration_ms: 0.105497
+      type: 'test'
+      ...
+    # Subtest: rejects ../echo
+    ok 5 - rejects ../echo
+      ---
+      duration_ms: 0.109496
+      type: 'test'
+      ...
+    # Subtest: rejects native/../echo
+    ok 6 - rejects native/../echo
+      ---
+      duration_ms: 0.061491
+      type: 'test'
+      ...
+    # Subtest: rejects native/echo?x=1
+    ok 7 - rejects native/echo?x=1
+      ---
+      duration_ms: 0.055531
+      type: 'test'
+      ...
+    # Subtest: rejects external/openweather_api
+    ok 8 - rejects external/openweather_api
+      ---
+      duration_ms: 0.053726
+      type: 'test'
+      ...
+    # Subtest: rejects external/../echo/run
+    ok 9 - rejects external/../echo/run
+      ---
+      duration_ms: 0.05468
+      type: 'test'
+      ...
+    # Subtest: rejects native/Echo
+    ok 10 - rejects native/Echo
+      ---
+      duration_ms: 0.06345
+      type: 'test'
+      ...
+    # Subtest: rejects native/echo/extra/segment
+    ok 11 - rejects native/echo/extra/segment
+      ---
+      duration_ms: 0.055277
+      type: 'test'
+      ...
+    # Subtest: rejects native/%2e%2e/echo
+    ok 12 - rejects native/%2e%2e/echo
+      ---
+      duration_ms: 0.057878
+      type: 'test'
+      ...
+    # Subtest: rejects native\\..\\echo
+    ok 13 - rejects native\\..\\echo
+      ---
+      duration_ms: 0.065417
+      type: 'test'
+      ...
+    # Subtest: rejects native/echo\\n
+    ok 14 - rejects native/echo\\n
+      ---
+      duration_ms: 0.070954
+      type: 'test'
+      ...
+    # Subtest: rejects native/echo\x00
+    ok 15 - rejects native/echo\x00
+      ---
+      duration_ms: 0.127873
+      type: 'test'
+      ...
+    1..15
+ok 11 - gateway target grammar excludes traversal and arbitrary components
+  ---
+  duration_ms: 2.269016
+  type: 'test'
+  ...
+# Subtest: A2A request is scoped to one target and assignment, without auth or room history
+ok 12 - A2A request is scoped to one target and assignment, without auth or room history
+  ---
+  duration_ms: 162.716611
+  type: 'test'
+  ...
+# Subtest: unsafe URL and target inputs are rejected before any network request
+ok 13 - unsafe URL and target inputs are rejected before any network request
+  ---
+  duration_ms: 1.172983
+  type: 'test'
+  ...
+# Subtest: bad JSON-RPC, task, target, counters, and failed tasks are all rejected
+    # Subtest: mismatched JSON-RPC id
+    ok 1 - mismatched JSON-RPC id
+      ---
+      duration_ms: 5.431793
+      type: 'test'
+      ...
+    # Subtest: JSON-RPC error
+    ok 2 - JSON-RPC error
+      ---
+      duration_ms: 25.493842
+      type: 'test'
+      ...
+    # Subtest: missing task
+    ok 3 - missing task
+      ---
+      duration_ms: 118.557358
+      type: 'test'
+      ...
+    # Subtest: failed task
+    ok 4 - failed task
+      ---
+      duration_ms: 14.451784
+      type: 'test'
+      ...
+    # Subtest: missing artifact
+    ok 5 - missing artifact
+      ---
+      duration_ms: 59.326807
+      type: 'test'
+      ...
+    # Subtest: duplicate execute-response artifacts
+    ok 6 - duplicate execute-response artifacts
+      ---
+      duration_ms: 18.309107
+      type: 'test'
+      ...
+    # Subtest: wrong target
+    ok 7 - wrong target
+      ---
+      duration_ms: 13.054308
+      type: 'test'
+      ...
+    # Subtest: fractional duration
+    ok 8 - fractional duration
+      ---
+      duration_ms: 5.356497
+      type: 'test'
+      ...
+    # Subtest: zero attempts
+    ok 9 - zero attempts
+      ---
+      duration_ms: 9.869897
+      type: 'test'
+      ...
+    # Subtest: component reports failure
+    ok 10 - component reports failure
+      ---
+      duration_ms: 2.282268
+      type: 'test'
+      ...
+    1..10
+ok 14 - bad JSON-RPC, task, target, counters, and failed tasks are all rejected
+  ---
+  duration_ms: 273.455026
+  type: 'test'
+  ...
+# Subtest: invalid content type, malformed JSON, oversized body, and redirect fail closed
+    # Subtest: HTTP 401 without credentials
+    ok 1 - HTTP 401 without credentials
+      ---
+      duration_ms: 51.389808
+      type: 'test'
+      ...
+    # Subtest: HTTP 404
+    ok 2 - HTTP 404
+      ---
+      duration_ms: 2.527415
+      type: 'test'
+      ...
+    # Subtest: HTTP 500
+    ok 3 - HTTP 500
+      ---
+      duration_ms: 2.091723
+      type: 'test'
+      ...
+    # Subtest: invalid content type
+    ok 4 - invalid content type
+      ---
+      duration_ms: 1.959605
+      type: 'test'
+      ...
+    # Subtest: malformed JSON
+    ok 5 - malformed JSON
+      ---
+      duration_ms: 2.336722
+      type: 'test'
+      ...
+    # Subtest: declared response over 1 MiB
+    ok 6 - declared response over 1 MiB
+      ---
+      duration_ms: 3.012333
+      type: 'test'
+      ...
+    # Subtest: chunked response over 1 MiB
+    ok 7 - chunked response over 1 MiB
+      ---
+      duration_ms: 62.560538
+      type: 'test'
+      ...
+    # Subtest: redirect is not followed
+    ok 8 - redirect is not followed
+      ---
+      duration_ms: 34.876528
+      type: 'test'
+      ...
+    1..8
+ok 15 - invalid content type, malformed JSON, oversized body, and redirect fail closed
+  ---
+  duration_ms: 161.842825
+  type: 'test'
+  ...
+# Subtest: gateway member validates its signed tool scope and assignment before dispatch
+ok 16 - gateway member validates its signed tool scope and assignment before dispatch
+  ---
+  duration_ms: 9811.534448
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 4: member token budget exceeded; event 4: member thread token budget exceeded
+# Subtest: gateway response over budget is never truncated or admitted and produces a signed exhaustion pause
+ok 17 - gateway response over budget is never truncated or admitted and produces a signed exhaustion pause
+  ---
+  duration_ms: 7512.620911
+  type: 'test'
+  ...
+# Subtest: gateway runner verifies the full signed chain before dispatch and makes no request for a tampered room
+ok 18 - gateway runner verifies the full signed chain before dispatch and makes no request for a tampered room
+  ---
+  duration_ms: 4893.788807
+  type: 'test'
+  ...
+# Subtest: gateway member budget exhaustion pauses before making a gateway request and reports per-thread usage
+ok 19 - gateway member budget exhaustion pauses before making a gateway request and reports per-thread usage
+  ---
+  duration_ms: 8096.167475
+  type: 'test'
+  ...
+# Subtest: a thread-scoped signed budget pause blocks only gateway dispatch on that thread
+ok 20 - a thread-scoped signed budget pause blocks only gateway dispatch on that thread
+  ---
+  duration_ms: 5989.514646
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 5: member token budget exceeded; event 5: member thread token budget exceeded
+# Subtest: Gateway output loses a concurrent budget race at the signed ledger lock and is not admitted
+ok 21 - Gateway output loses a concurrent budget race at the signed ledger lock and is not admitted
+  ---
+  duration_ms: 6609.569076
+  type: 'test'
+  ...
+# Subtest: unavailable loopback gateway reports NOT AVAILABLE and appends no Room event
+ok 22 - unavailable loopback gateway reports NOT AVAILABLE and appends no Room event
+  ---
+  duration_ms: 4212.755879
+  type: 'test'
+  ...
+# Subtest: real pinned gateway native/echo runs on loopback, signs a full turn, and preserves the challenge/verdict chain
+ok 23 - real pinned gateway native/echo runs on loopback, signs a full turn, and preserves the challenge/verdict chain
+  ---
+  duration_ms: 8993.512623
+  type: 'test'
+  ...
+# Subtest: a room refuses a second Ollama-backed member
+ok 24 - a room refuses a second Ollama-backed member
+  ---
+  duration_ms: 2162.322307
+  type: 'test'
+  ...
+# Subtest: STUB Ollama draft flows from the existing assignment to one admitted signed turn
+ok 25 - STUB Ollama draft flows from the existing assignment to one admitted signed turn
+  ---
+  duration_ms: 5129.426676
+  type: 'test'
+  ...
+# Subtest: STUB Ollama measured usage beyond the assigned member budget is rejected without admission or retry
+ok 26 - STUB Ollama measured usage beyond the assigned member budget is rejected without admission or retry
+  ---
+  duration_ms: 3581.014623
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 5: member token budget exceeded; event 5: member thread token budget exceeded
+# Subtest: STUB Ollama draft loses a concurrent budget race and the locked ledger rejects admission
+ok 27 - STUB Ollama draft loses a concurrent budget race and the locked ledger rejects admission
+  ---
+  duration_ms: 5388.383142
+  type: 'test'
+  ...
+# Subtest: STUB Ollama down path reports NOT AVAILABLE and writes nothing to the ledger
+ok 28 - STUB Ollama down path reports NOT AVAILABLE and writes nothing to the ledger
+  ---
+  duration_ms: 3612.995344
+  type: 'test'
+  ...
+# Subtest: live member verifies the assignment chain before contacting Ollama
+ok 29 - live member verifies the assignment chain before contacting Ollama
+  ---
+  duration_ms: 3596.456879
+  type: 'test'
+  ...
+# Subtest: STUB Ollama admissions retain wrapper stripping before filler stripping
+ok 30 - STUB Ollama admissions retain wrapper stripping before filler stripping
+  ---
+  duration_ms: 6005.641831
+  type: 'test'
+  ...
+# Subtest: optional live Ollama generation reports NOT RUN when no usable local model is available
+ok 31 - optional live Ollama generation reports NOT RUN when no usable local model is available # SKIP NOT RUN: Ollama is not reachable at the configured loopback host
+  ---
+  duration_ms: 2.71095
+  type: 'test'
+  ...
+# Subtest: migrated CLI-spawned room passes the unchanged root verifier
+ok 32 - migrated CLI-spawned room passes the unchanged root verifier
+  ---
+  duration_ms: 3023.764464
+  type: 'test'
+  ...
+# Subtest: legacy scaffold verifier runs from an empty copied directory with only genesis and transcript
+ok 33 - legacy scaffold verifier runs from an empty copied directory with only genesis and transcript
+  ---
+  duration_ms: 216.681632
+  type: 'test'
+  ...
+# Subtest: spawn writes typed genesis, a signed system event, and keeps Ed25519 keys outside the room tree
+ok 34 - spawn writes typed genesis, a signed system event, and keeps Ed25519 keys outside the room tree
+  ---
+  duration_ms: 1796.510708
+  type: 'test'
+  ...
+# Subtest: turns are exact signed envelopes and a one-byte transcript edit is rejected at that event
+ok 35 - turns are exact signed envelopes and a one-byte transcript edit is rejected at that event
+  ---
+  duration_ms: 2902.410874
+  type: 'test'
+  ...
+# Subtest: fixture task turns, challenges, and the single permitted verdict stay in the signed log
+ok 36 - fixture task turns, challenges, and the single permitted verdict stay in the signed log
+  ---
+  duration_ms: 3639.267631
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 8: insufficient supporting cosigns
+# Subtest: proposal supersedes cite an earlier proposal and canon uses the typed current rule
+ok 37 - proposal supersedes cite an earlier proposal and canon uses the typed current rule
+  ---
+  duration_ms: 8102.574274
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 3: member budget is paused
+# Subtest: budget pauses are signed, failed output is quarantined without changing the ledger, and fixture membership is self-certified
+ok 38 - budget pauses are signed, failed output is quarantined without changing the ledger, and fixture membership is self-certified
+  ---
+  duration_ms: 6005.477211
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: Checkpoint snapshot already exists: /home/.z/workspaces/con_IR1cdiGfdjGG0gU4/independent-review-20261112-5Fmhl1/fresh-rerun/clean-home-room/tmp/the-room-test-OZ5dPT/rooms/seal-test-7be39c6c/seams.5.md
+# Subtest: seam checkpoints snapshot the exact current seams before append and re-seal validates latest and historical snapshots
+ok 39 - seam checkpoints snapshot the exact current seams before append and re-seal validates latest and historical snapshots
+  ---
+  duration_ms: 3645.233382
+  type: 'test'
+  ...
+# Subtest: exit release requires signed human acceptance and only returns the post-write verified turn
+ok 40 - exit release requires signed human acceptance and only returns the post-write verified turn
+  ---
+  duration_ms: 4509.516899
+  type: 'test'
+  ...
+# Subtest: log-tail fixture removes only declared trailing tool framing and keeps signal bytes exact
+ok 41 - log-tail fixture removes only declared trailing tool framing and keeps signal bytes exact
+  ---
+  duration_ms: 75.911206
+  type: 'test'
+  ...
+# Subtest: repeated-header fixture removes only the duplicate marked block
+ok 42 - repeated-header fixture removes only the duplicate marked block
+  ---
+  duration_ms: 4.82094
+  type: 'test'
+  ...
+# Subtest: mixed fixture removes one duplicate header, one repeated status block, and only the trailing log tail
+ok 43 - mixed fixture removes one duplicate header, one repeated status block, and only the trailing log tail
+  ---
+  duration_ms: 2.532816
+  type: 'test'
+  ...
+# Subtest: unknown content and a very long non-matching line pass through byte-identically
+ok 44 - unknown content and a very long non-matching line pass through byte-identically
+  ---
+  duration_ms: 15.037462
+  type: 'test'
+  ...
+# Subtest: clean turns pass unchanged and receipts are exact, event-linked, and hash-chained
+ok 45 - clean turns pass unchanged and receipts are exact, event-linked, and hash-chained
+  ---
+  duration_ms: 2996.009612
+  type: 'test'
+  ...
+# Subtest: oversize input is rejected before stripping even when duplicate removal would bring it under the limit
+ok 46 - oversize input is rejected before stripping even when duplicate removal would bring it under the limit
+  ---
+  duration_ms: 1043.731151
+  type: 'test'
+  ...
+# ALERT JASON: event admission rejected; accepted transcript unchanged: local candidate check failed: event 3: member budget is paused
+# Subtest: a policy-rejected turn remains rejected before its strip receipt can be admitted
+ok 47 - a policy-rejected turn remains rejected before its strip receipt can be admitted
+  ---
+  duration_ms: 2293.728207
+  type: 'test'
+  ...
+# Subtest: strip-demo spawns a room that the frozen root verifier accepts
+ok 48 - strip-demo spawns a room that the frozen root verifier accepts
+  ---
+  duration_ms: 2861.245819
+  type: 'test'
+  ...
+# Subtest: filler fixture strips the specified leading, request, and trailing frames without capitalization
+ok 49 - filler fixture strips the specified leading, request, and trailing frames without capitalization
+  ---
+  duration_ms: 3.130077
+  type: 'test'
+  ...
+# Subtest: protected fixture preserves code, quotes, URLs, paths, filenames, identifiers, and JSON
+ok 50 - protected fixture preserves code, quotes, URLs, paths, filenames, identifiers, and JSON
+  ---
+  duration_ms: 14.950772
+  type: 'test'
+  ...
+# Subtest: softener fixture removes each declared F3 phrase exactly
+ok 51 - softener fixture removes each declared F3 phrase exactly
+  ---
+  duration_ms: 6.03435
+  type: 'test'
+  ...
+# Subtest: padding fixture applies F4 and deletion-only punctuation and whitespace repairs
+ok 52 - padding fixture applies F4 and deletion-only punctuation and whitespace repairs
+  ---
+  duration_ms: 14.349593
+  type: 'test'
+  ...
+# Subtest: combined fixture applies wrapper stripping before filler stripping and records both rule sets
+ok 53 - combined fixture applies wrapper stripping before filler stripping and records both rule sets
+  ---
+  duration_ms: 34.743623
+  type: 'test'
+  ...
+# Subtest: every wrapper, filler, and combined fixture output is an exact input subsequence
+ok 54 - every wrapper, filler, and combined fixture output is an exact input subsequence
+  ---
+  duration_ms: 7.372832
+  type: 'test'
+  ...
+# Subtest: strip-demo accepts filler and combined fixtures and their rooms pass the frozen verifier
+ok 55 - strip-demo accepts filler and combined fixtures and their rooms pass the frozen verifier
+  ---
+  duration_ms: 4823.552413
+  type: 'test'
+  ...
+# Subtest: F1/F2 variants are case-insensitive and whole-phrase while preserving every kept character
+ok 56 - F1/F2 variants are case-insensitive and whole-phrase while preserving every kept character
+  ---
+  duration_ms: 4.051972
+  type: 'test'
+  ...
+1..56
+# tests 108
+# suites 0
+# pass 107
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 147546.535211
+
+--- EXIT STATUS: 0 ---

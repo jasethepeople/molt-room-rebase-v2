@@ -1,0 +1,9 @@
+
+> the-room-core@0.1.0 typecheck
+> tsc --noEmit
+
+tests/gateway-client.test.ts(220,35): error TS6133: 'request' is declared but its value is never read.
+tests/gateway-member.test.ts(11,3): error TS6133: 'addFixtureMember' is declared but its value is never read.
+tests/gateway-member.test.ts(23,1): error TS6133: 'SignedEvent' is declared but its value is never read.
+tests/gateway-member.test.ts(340,40): error TS18048: 'result.event.body.usage.inputTokens' is possibly 'undefined'.
+tests/gateway-member.test.ts(340,79): error TS18048: 'result.event.body.usage.outputTokens' is possibly 'undefined'.
